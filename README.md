@@ -1,5 +1,5 @@
 # DAAN-FRC
 
-We just finished our first commit.
+## Folders
 
-So be patience.
+`~/notes` : 紀錄去參訪時的筆記
