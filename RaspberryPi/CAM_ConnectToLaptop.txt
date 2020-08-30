@@ -1,0 +1,11 @@
+安裝Virtual Box Extention後
+
+機器開機
+cmd執行
+
+cd c:\Program Files\Oracle\VirtualBox
+VBoxManage list webcams
+VboxManage controlvm "Raspbian_opencv_4.1.0" webcam attach .1
+
+Raspbian_opencv_4.1.0 換成virtual box的機器名稱
+.1換成相對應的webcams編號
