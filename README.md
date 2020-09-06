@@ -2,4 +2,6 @@
 
 ## Folders
 
-`~/notes` : 紀錄去參訪時的筆記
+`~/RaspberryPi` : Test code for visual detection
+
+`~/tf_cv2` : Test code for model training
