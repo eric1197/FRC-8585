@@ -1,13 +1,37 @@
 # https://www.tensorflow.org/tutorials/load_data/tfrecord?hl=zh-tw
 
-import tensorflow as tf
-from tensorflow import keras
 import numpy as np
 import cv2
 from progressbar import *
+import argparse
+import time, os
+
+def is_int(s):
+    try: 
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+p = argparse.ArgumentParser(description="A script that trains a model and save it as *.h5")
+p.add_argument('-r', '--repeats', required=False, help='Set how much times the dataset repeats. (Default 16)', dest="r", type=int, default=16)
+p.add_argument('-f', '--file', required=True, help='Specify the training file (must be a valid TFRecords file)', dest="f")
+args = vars(p.parse_args())
+if(not is_int(args["r"])):
+    p.error(str(args["r"])+" is not a int")
+#if(args["f"] == None):
+#    p.error("File not specified. Add -f <file> to continue.")
+if(not os.path.isfile(str(args["f"]))):
+    p.error("File not found : "+str(args["f"]))
+
+import tensorflow as tf
+from tensorflow import keras
+
+t = time.strftime("%j%H%M%S", time.localtime()) # this is a string of numbers
 
 #raw_dataset = tf.data.TFRecordDataset("tfrecords/249030600.tfrecords")
-raw_dataset = tf.data.TFRecordDataset("tfrecords\\249173041.tfrecords")
+#raw_dataset = tf.data.TFRecordDataset("tfrecords\\249173041.tfrecords")
+raw_dataset = tf.data.TFRecordDataset(str(args["f"]))
 
 # Create a description of the features.
 feature_description = {
@@ -25,9 +49,9 @@ def _parse_function(example_proto):
 
 dataset = raw_dataset.map(_parse_function)
 
-dataset = dataset.repeat(16)
+dataset = dataset.repeat(int(args["r"]))
 dataset = dataset.shuffle(16384) # SHUFFLE_BUFFER
-dataset = dataset.batch(8) # BATCH_SIZE
+dataset = dataset.batch(64) # BATCH_SIZE
 
 #for parsed_record in dataset.take(10):
 #    print(repr(parsed_record)[:200])
@@ -59,24 +83,26 @@ model = keras.models.Sequential([
 #    keras.layers.Conv2D(8, (1,2), activation="relu"),
 #    keras.layers.MaxPooling2D(2, data_format='channels_last'),
     keras.layers.Flatten(),
-    keras.layers.Dense(32, activation='relu'),
-    keras.layers.Dense(32, activation='relu'),
-    keras.layers.Dense(3 , activation="softmax") # final output
+    keras.layers.Dense(32),
+    keras.layers.Dense(32),
+    keras.layers.Dense(3 ) # final output
 ])
 
 model.summary()
 
 # Train
-model.compile(optimizer=keras.optimizers.Adam(0.001),
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
+optimizer = keras.optimizers.RMSprop(0.001)
+loss_function = keras.losses.MeanSquaredError()
+model.compile(optimizer=optimizer,
+              loss=loss_function,
+              metrics=[])
 
 #batchsize = 256
 #for i in xrange(0, len(dataset), batchsize):
 #    batch = dataset[i:i+batchsize]
-total = 20000
+total = len([0 for _ in dataset])
 widgets = [
-    FormatLabel("[Progress: %(value)"+str(int(np.log10(total))+1)+"d"), "/",
+    FormatLabel("[%(value)"+str(int(np.log10(total))+1)+"d"), "/",
     FormatLabel("%(max)d"), "]",
     Percentage(), " ",
     Bar(marker="=",left="[",right="]",fill="-"), " ",
@@ -94,7 +120,8 @@ for batch in dataset:
         img = img.reshape(input_shape)
         x_train.append(img)
     x_train = np.array(x_train)
-    y_train = [batch["x"].numpy()/2000+0.5,batch["y"].numpy()/1000,batch["z"].numpy()/1000]
+    #y_train = [batch["x"].numpy()/2000+0.5,batch["y"].numpy()/1000,batch["z"].numpy()/1000]
+    y_train = [batch["x"].numpy(),batch["y"].numpy(),batch["z"].numpy()]
     y_train = np.array(y_train).transpose()
     if i % 3 == 0:
         model.test_on_batch(x_train, y_train)
@@ -107,7 +134,7 @@ pbar.finish()
 """
 model.fit(x_train, y_train, epochs=10, validation_split=0.05)
 """
-model.save("test.h5")
+model.save("test_"+str(args["r"])+".h5")
 
 # Test
 #score = model.evaluate(x_test, y_test, verbose=0)
