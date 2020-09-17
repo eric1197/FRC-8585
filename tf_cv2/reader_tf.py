@@ -49,9 +49,21 @@ def _parse_function(example_proto):
 
 dataset = raw_dataset.map(_parse_function)
 
-dataset = dataset.repeat(int(args["r"]))
-dataset = dataset.shuffle(16384) # SHUFFLE_BUFFER
-dataset = dataset.batch(64) # BATCH_SIZE
+if(int(args["r"]) < 64):
+    dataset = dataset.repeat(int(args["r"]))
+    dataset = dataset.shuffle(16384) # SHUFFLE_BUFFER
+    dataset = dataset.batch(64) # BATCH_SIZE
+    total = len([0 for _ in dataset])
+else:
+    total = 0
+    for _ in dataset:
+        total = total + 1
+    
+    dataset = dataset.repeat(int(args["r"]))
+    dataset = dataset.shuffle(16384) # SHUFFLE_BUFFER
+    dataset = dataset.batch(64) # BATCH_SIZE
+
+    total = np.ceil(total * int(args["r"]) / 64)
 
 #for parsed_record in dataset.take(10):
 #    print(repr(parsed_record)[:200])
@@ -100,7 +112,6 @@ model.compile(optimizer=optimizer,
 #batchsize = 256
 #for i in xrange(0, len(dataset), batchsize):
 #    batch = dataset[i:i+batchsize]
-total = len([0 for _ in dataset])
 widgets = [
     FormatLabel("[%(value)"+str(int(np.log10(total))+1)+"d"), "/",
     FormatLabel("%(max)d"), "]",
