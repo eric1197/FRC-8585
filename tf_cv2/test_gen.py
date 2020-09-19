@@ -4,19 +4,27 @@ import numpy as np
 import cv2
 
 size = (768,1024,1)
+n = 100
 
 def main():
-    img, pos = gen()
-    x = np.array([img])
-    y = np.array([[pos[0]],[pos[1]],[pos[2]]]).transpose()
-    model = keras.models.load_model("test_16.h5")
+    model = keras.models.load_model("test_256.h5")
 
+    avg = 0
+    for _ in range(n):
+        img, pos = gen()
+        x = np.array([img])
+        y = np.array([[pos[0]],[pos[1]],[pos[2]]]).transpose()
+
+        #print()
+        #print("Predict :", model.predict(x)[0])
+        #print("Expect  : [",pos[0],",",pos[1],",",pos[2],"]")
+        #print()
+        lost = model.test_on_batch(x,y)
+        #print("Lost    :", lost)
+        avg = avg + lost
+    avg = avg / n
     print()
-    print("Predict :", model.predict(x)[0])
-    print("Expect  : [",pos[0],",",pos[1],",",pos[2],"]")
-    print()
-    lost = model.test_on_batch(x,y)
-    print("Lost    :", lost)
+    print("Average :", avg)
 
 def gen():
     img = np.zeros(size, np.uint8) # GrayScale Empty Image

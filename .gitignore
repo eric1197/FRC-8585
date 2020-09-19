@@ -1,3 +1,4 @@
 tf_cv2/__pycache__
 tf_cv2/tfrecords/*
 tf_cv2/*.h5
+tf_cv2/h5/*

@@ -105,9 +105,7 @@ model.summary()
 # Train
 optimizer = keras.optimizers.RMSprop(0.001)
 loss_function = keras.losses.MeanSquaredError()
-model.compile(optimizer=optimizer,
-              loss=loss_function,
-              metrics=[])
+model.compile(optimizer=optimizer, loss=loss_function, metrics=[])
 
 #batchsize = 256
 #for i in xrange(0, len(dataset), batchsize):
@@ -134,10 +132,7 @@ for batch in dataset:
     #y_train = [batch["x"].numpy()/2000+0.5,batch["y"].numpy()/1000,batch["z"].numpy()/1000]
     y_train = [batch["x"].numpy(),batch["y"].numpy(),batch["z"].numpy()]
     y_train = np.array(y_train).transpose()
-    if i % 3 == 0:
-        model.test_on_batch(x_train, y_train)
-    else:
-        model.train_on_batch(x_train, y_train)
+    model.train_on_batch(x_train, y_train)
     i = i + 1
     pbar.update(i)
 
